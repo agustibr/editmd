@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>editMD = Ace editor + Showdown + Markdown in Javascript</title>
+	
+	<link href="css/styles.css" media="all" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+
+	<div id="pageHeader">
+		<h1><a href="https://github.com/AgustiBelloc/editmd">editMD</a></h1>
+		<h4><a href="http://daringfireball.net/projects/markdown/" title="The Markdown web site">Markdown</a> + <a href="http://ace.ajax.org/">Ace editor</a> + <a href="https://github.com/coreyti/showdown">Showdown</a></h4>
+	</div>
+	
+	<div id="leftContainer">
+		<div class="paneHeader">
+			<input type="text" name="inputName" id="inputName" value="Input.md"/>
+		</div>
+		<div id="inputPaneAce"></div>
+		<textarea name="inputPane" id="inputPane"></textarea>
+	</div> <!-- leftContainer -->
+
+	<div id="rightContainer">
+		<div class="paneHeader">
+			<select id="paneSetting">
+				<option value="previewPane">Preview</option>
+				<option value="outputPane">HTML Output</option>
+				<option value="syntaxPane">Syntax Guide</option>
+			</select>
+		</div>
+		<textarea id="outputPane" class="pane" cols="80" rows="20" readonly="readonly"></textarea>
+	
+		<div id="previewPane" class="pane">
+			<noscript><h2>You'll need to enable Javascript to use this tool.</h2></noscript>
+		</div>
+	
+		<textarea id="syntaxPane" class="pane" cols="80" rows="20" readonly="readonly">Markdown Syntax Guide (sorry no content)</textarea>
+
+	</div><!-- rightContainer -->
+	
+	<div id="footer">
+		<span id="byline">
+			<b><a href="https://github.com/AgustiBelloc/editmd">Download editMD</a></b>
+		</span>
+	
+		<span id="convertTextControls">
+			<button id="convertTextButton" type="button" title="Convert text now">
+				Convert text
+			</button>
+			
+			<select id="convertTextSetting">
+				<option value="delayed">in the background</option>
+				<option value="continuous">every keystroke</option>
+				<option value="manual">manually</option>
+			</select>
+		</span>
+		<div id="processingTime" title="Last processing time">0 ms</div>
+	</div>
+	
+
+<script type="text/javascript" src="lib/jquery-2.0.0.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="lib/ace/ace.js" charset="utf-8"></script>
+<script type="text/javascript" src="lib/showdown/showdown.js" charset="utf-8"></script>
+<script type="text/javascript" src="lib/showdown/showdown-gui.js" charset="utf-8"></script>
+
+<!-- <script src="keymaster.min.js" type="text/javascript" charset="utf-8"></script> -->
+<script>
+var mdTxt = new Array(1);
+var editor = ace.edit("inputPaneAce");
+var textarea = $('textarea[name="inputPane"]');
+editor.getSession().setValue(textarea.val());
+editor.getSession().on('change', function(){
+	textarea.val(editor.getSession().getValue());
+	mdName = $('input[name="inputName"]').val();
+	mdTxt[0] = editor.getSession().getValue();
+	console.log(mdTxt);
+});
+editor.setTheme("ace/theme/github");
+editor.getSession().setMode("ace/mode/markdown");
+editor.commands.addCommand({
+	name: 'myCommand',
+	bindKey: {win: 'Ctrl-s',  mac: 'Command-s'},
+	exec: function(editor) {
+		console.log('you pressed Ctrl+s!')
+		saveInput(mdTxt,mdName)
+	},
+	readOnly: true // false if this command should not apply in readOnly mode
+});
+
+function saveInput(mdTxt,mdName){
+	window.webkitRequestFileSystem(window.TEMPORARY, 1024*1024, function(fs) {
+		fs.root.getFile(mdName, {create: true}, function(fileEntry) {
+			fileEntry.createWriter(function(fileWriter) {
+
+				var blob = new Blob(mdTxt);
+
+				fileWriter.addEventListener("writeend", function() {
+					// navigate to file, will download
+					location.href = fileEntry.toURL();
+				}, false);
+
+				fileWriter.write(blob);
+			}, function() {});
+		}, function() {});
+	}, function() {});
+}
+
+</script>
+
+</body>
+</html>
